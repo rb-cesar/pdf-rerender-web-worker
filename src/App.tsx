@@ -1,35 +1,42 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState } from 'react';
+import './App.css';
+import { saveAs } from 'file-saver';
+import RenderPDFViewer from './RenderPDFViewer';
+
+let timeout: any = null;
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [text, setText] = useState('');
+
+  function handleChangeInput(ev: React.ChangeEvent<HTMLInputElement>) {
+    if (timeout) {
+      clearTimeout(timeout);
+    }
+
+    timeout = setTimeout(() => {
+      console.log('Debounced:', text);
+      setText(ev.target.value);
+    }, 500);
+  }
 
   return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <div>
+      <input onChange={handleChangeInput} />
+      <button
+        onClick={async () => {
+          const { renderPDF } = await import('./PDF');
+          const blob = await renderPDF({ title: text });
+          saveAs(blob, 'test.pdf');
+        }}
+      >
+        Download
+      </button>
+      <RenderPDFViewer
+        title={text}
+        style={{ backgroundColor: 'grey', width: '500px', height: '760px' }}
+      />
+    </div>
+  );
 }
 
-export default App
+export default App;
